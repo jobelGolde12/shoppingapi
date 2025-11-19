@@ -1,192 +1,448 @@
-
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-<meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'Laravel') }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --success: #4cc9f0;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
-<style>
-    body {
-        margin: 0;
-        background: #f8f9fa;
-        font-family: Arial, sans-serif;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    header {
-        background: #3f51b5;
-        padding: 15px;
-        color: white;
-        text-align: center;
-        font-size: 22px;
-        font-weight: bold;
-    }
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark);
+            line-height: 1.6;
+        }
 
-    .container {
-        max-width: 900px;
-        margin: 20px auto;
-        padding: 20px;
-    }
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 20px 15px;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
 
-    .box {
-        background: white;
-        border-radius: 6px;
-        padding: 20px;
-        margin-bottom: 25px;
-        border: 1px solid #ddd;
-    }
+        header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
 
-    .box h2 {
-        font-size: 20px;
-        margin-bottom: 10px;
-    }
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
 
-    .box p {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 15px;
-    }
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 25px;
+        }
 
-    label {
-        font-weight: bold;
-        display: block;
-        margin: 6px 0 2px;
-    }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
 
-    input, textarea {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 12px;
-        border-radius: 4px;
-        border: 1px solid #bbb;
-        font-size: 14px;
-    }
+        .box {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 0;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
 
-    button {
-        background: #3f51b5;
-        border: none;
-        color: white;
-        padding: 10px 18px;
-        font-size: 15px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
+        .box:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
 
-    button:hover {
-        background: #303f9f;
-    }
+        .box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
 
-    .output {
-        margin-top: 15px;
-        background: #272822;
-        color: #00e676;
-        padding: 15px;
-        font-family: monospace;
-        min-height: 80px;
-        border-radius: 4px;
-        white-space: pre-wrap;
-    }
-</style>
+        .box h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .box h2 i {
+            color: var(--primary);
+        }
+
+        .box p {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 20px;
+            background: var(--light);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            background: white;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .output {
+            margin-top: 20px;
+            background: #1a1a1a;
+            color: var(--success);
+            padding: 18px;
+            font-family: 'Fira Code', monospace;
+            min-height: 100px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: 14px;
+            border-left: 4px solid var(--success);
+            position: relative;
+        }
+
+        .output::before {
+            content: 'Response';
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--success);
+            color: #1a1a1a;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom-left-radius: 4px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success {
+            background-color: #4ade80;
+        }
+
+        .status-error {
+            background-color: #f87171;
+        }
+
+        .status-pending {
+            background-color: #fbbf24;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+        .method-put { background: #f59e0b; color: white; }
+        .method-delete { background: #ef4444; color: white; }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 14px;
+            margin-top: 40px;
+        }
+    </style>
 </head>
 <body>
 
-<header>Messaging API Testing Tool</header>
+<header>
+    <i class="fas fa-comments"></i> Shopping API Testing Tool
+</header>
 
 <div class="container">
 
     <!-- START CONVERSATION -->
     <div class="box">
-        <h2>Start Conversation</h2>
-        <p>POST /api/conversation/start</p>
-        <label>User One ID</label>
-        <input id="user_one_id">
+        <h2><i class="fas fa-plus-circle"></i> Start Conversation</h2>
+        <p><span class="api-method method-post">POST</span> /api/conversation/start</p>
+        
+        <div class="form-group">
+            <label for="user_one_id">User One ID</label>
+            <input id="user_one_id" placeholder="Enter user ID">
+        </div>
+        
+        <div class="form-group">
+            <label for="user_two_id">User Two ID</label>
+            <input id="user_two_id" placeholder="Enter user ID">
+        </div>
 
-        <label>User Two ID</label>
-        <input id="user_two_id">
-
-        <button onclick="startConversation()">Start</button>
-        <div id="out_startConversation" class="output"></div>
+        <button onclick="startConversation()">
+            <i class="fas fa-play"></i> Start Conversation
+        </button>
+        
+        <div class="loading" id="loading_startConversation">
+            <div class="loading-spinner"></div> Processing...
+        </div>
+        
+        <div id="out_startConversation" class="output">Response will appear here</div>
     </div>
 
     <!-- SEND MESSAGE -->
     <div class="box">
-        <h2>Send Message</h2>
-        <p>POST /api/message/send</p>
+        <h2><i class="fas fa-paper-plane"></i> Send Message</h2>
+        <p><span class="api-method method-post">POST</span> /api/message/send</p>
 
-        <label>Conversation ID</label>
-        <input id="send_conversation_id">
+        <div class="form-group">
+            <label for="send_conversation_id">Conversation ID</label>
+            <input id="send_conversation_id" placeholder="Enter conversation ID">
+        </div>
+        
+        <div class="form-group">
+            <label for="send_sender_id">Sender ID</label>
+            <input id="send_sender_id" placeholder="Enter sender ID">
+        </div>
+        
+        <div class="form-group">
+            <label for="send_message">Message</label>
+            <textarea id="send_message" rows="3" placeholder="Type your message here"></textarea>
+        </div>
 
-        <label>Sender ID</label>
-        <input id="send_sender_id">
-
-        <label>Message</label>
-        <textarea id="send_message"></textarea>
-
-        <button onclick="sendMessage()">Send</button>
-        <div id="out_sendMessage" class="output"></div>
+        <button onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i> Send Message
+        </button>
+        
+        <div class="loading" id="loading_sendMessage">
+            <div class="loading-spinner"></div> Sending...
+        </div>
+        
+        <div id="out_sendMessage" class="output">Response will appear here</div>
     </div>
 
     <!-- GET MESSAGES -->
     <div class="box">
-        <h2>Get Messages</h2>
-        <p>GET /api/message/{conversation_id}</p>
+        <h2><i class="fas fa-envelope-open-text"></i> Get Messages</h2>
+        <p><span class="api-method method-get">GET</span> /api/message/{conversation_id}</p>
 
-        <label>Conversation ID</label>
-        <input id="get_messages_convo">
+        <div class="form-group">
+            <label for="get_messages_convo">Conversation ID</label>
+            <input id="get_messages_convo" placeholder="Enter conversation ID">
+        </div>
 
-        <button onclick="getMessages()">Fetch</button>
-        <div id="out_getMessages" class="output"></div>
+        <button onclick="getMessages()">
+            <i class="fas fa-search"></i> Fetch Messages
+        </button>
+        
+        <div class="loading" id="loading_getMessages">
+            <div class="loading-spinner"></div> Fetching...
+        </div>
+        
+        <div id="out_getMessages" class="output">Response will appear here</div>
     </div>
 
     <!-- UPDATE MESSAGE -->
     <div class="box">
-        <h2>Update Message</h2>
-        <p>PUT /api/message/{id}</p>
+        <h2><i class="fas fa-edit"></i> Update Message</h2>
+        <p><span class="api-method method-put">PUT</span> /api/message/{id}</p>
 
-        <label>Message ID</label>
-        <input id="update_msg_id">
+        <div class="form-group">
+            <label for="update_msg_id">Message ID</label>
+            <input id="update_msg_id" placeholder="Enter message ID">
+        </div>
+        
+        <div class="form-group">
+            <label for="update_msg_text">New Message</label>
+            <textarea id="update_msg_text" rows="3" placeholder="Enter new message content"></textarea>
+        </div>
 
-        <label>New Message</label>
-        <textarea id="update_msg_text"></textarea>
-
-        <button onclick="updateMessage()">Update</button>
-        <div id="out_updateMessage" class="output"></div>
+        <button onclick="updateMessage()">
+            <i class="fas fa-save"></i> Update Message
+        </button>
+        
+        <div class="loading" id="loading_updateMessage">
+            <div class="loading-spinner"></div> Updating...
+        </div>
+        
+        <div id="out_updateMessage" class="output">Response will appear here</div>
     </div>
 
     <!-- DELETE MESSAGE -->
     <div class="box">
-        <h2>Delete Message</h2>
-        <p>DELETE /api/message/{id}</p>
+        <h2><i class="fas fa-trash-alt"></i> Delete Message</h2>
+        <p><span class="api-method method-delete">DELETE</span> /api/message/{id}</p>
 
-        <label>Message ID</label>
-        <input id="delete_msg_id">
+        <div class="form-group">
+            <label for="delete_msg_id">Message ID</label>
+            <input id="delete_msg_id" placeholder="Enter message ID">
+        </div>
 
-        <button onclick="deleteMessage()">Delete</button>
-        <div id="out_deleteMessage" class="output"></div>
+        <button onclick="deleteMessage()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+            <i class="fas fa-trash"></i> Delete Message
+        </button>
+        
+        <div class="loading" id="loading_deleteMessage">
+            <div class="loading-spinner"></div> Deleting...
+        </div>
+        
+        <div id="out_deleteMessage" class="output">Response will appear here</div>
     </div>
 
     <!-- MARK AS READ -->
     <div class="box">
-        <h2>Mark Message as Read</h2>
-        <p>PUT /api/message/{id}/read</p>
+        <h2><i class="fas fa-check-double"></i> Mark Message as Read</h2>
+        <p><span class="api-method method-put">PUT</span> /api/message/{id}/read</p>
 
-        <label>Message ID</label>
-        <input id="read_msg_id">
+        <div class="form-group">
+            <label for="read_msg_id">Message ID</label>
+            <input id="read_msg_id" placeholder="Enter message ID">
+        </div>
 
-        <button onclick="markAsRead()">Mark</button>
-        <div id="out_markAsRead" class="output"></div>
+        <button onclick="markAsRead()">
+            <i class="fas fa-check"></i> Mark as Read
+        </button>
+        
+        <div class="loading" id="loading_markAsRead">
+            <div class="loading-spinner"></div> Processing...
+        </div>
+        
+        <div id="out_markAsRead" class="output">Response will appear here</div>
     </div>
 
     <!-- GET USER CONVERSATIONS -->
     <div class="box">
-        <h2>My Conversations</h2>
-        <p>GET /api/conversations/{user_id}</p>
+        <h2><i class="fas fa-comments"></i> My Conversations</h2>
+        <p><span class="api-method method-get">GET</span> /api/conversations/{user_id}</p>
 
-        <label>User ID</label>
-        <input id="user_conversations_id">
+        <div class="form-group">
+            <label for="user_conversations_id">User ID</label>
+            <input id="user_conversations_id" placeholder="Enter user ID">
+        </div>
 
-        <button onclick="getUserConversations()">Fetch</button>
-        <div id="out_userConversations" class="output"></div>
+        <button onclick="getUserConversations()">
+            <i class="fas fa-list"></i> Fetch Conversations
+        </button>
+        
+        <div class="loading" id="loading_userConversations">
+            <div class="loading-spinner"></div> Fetching...
+        </div>
+        
+        <div id="out_userConversations" class="output">Response will appear here</div>
     </div>
 
 </div>
@@ -202,63 +458,125 @@
         }).then(res => res.json());
     }
 
+    // Helper function to show loading state
+    function setLoadingState(buttonId, isLoading) {
+        const button = document.querySelector(`button[onclick="${buttonId}()"]`);
+        const loadingElement = document.getElementById(`loading_${buttonId}`);
+        
+        if (isLoading) {
+            button.disabled = true;
+            loadingElement.style.display = 'block';
+        } else {
+            button.disabled = false;
+            loadingElement.style.display = 'none';
+        }
+    }
+
     // 1. Start Conversation
     async function startConversation() {
-        const result = await request(`${API}/conversation/start`, "POST", {
-            user_one_id: document.getElementById("user_one_id").value,
-            user_two_id: document.getElementById("user_two_id").value,
-        });
-        document.getElementById("out_startConversation").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('startConversation', true);
+        try {
+            const result = await request(`${API}/conversation/start`, "POST", {
+                user_one_id: document.getElementById("user_one_id").value,
+                user_two_id: document.getElementById("user_two_id").value,
+            });
+            document.getElementById("out_startConversation").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_startConversation").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('startConversation', false);
+        }
     }
 
     // 2. Send Message
     async function sendMessage() {
-        const result = await request(`${API}/message/send`, "POST", {
-            conversation_id: document.getElementById("send_conversation_id").value,
-            sender_id: document.getElementById("send_sender_id").value,
-            message: document.getElementById("send_message").value,
-        });
-        document.getElementById("out_sendMessage").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('sendMessage', true);
+        try {
+            const result = await request(`${API}/message/send`, "POST", {
+                conversation_id: document.getElementById("send_conversation_id").value,
+                sender_id: document.getElementById("send_sender_id").value,
+                message: document.getElementById("send_message").value,
+            });
+            document.getElementById("out_sendMessage").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_sendMessage").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('sendMessage', false);
+        }
     }
 
     // 3. Get Messages
     async function getMessages() {
-        const id = document.getElementById("get_messages_convo").value;
-        const result = await request(`${API}/message/${id}`);
-        document.getElementById("out_getMessages").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('getMessages', true);
+        try {
+            const id = document.getElementById("get_messages_convo").value;
+            const result = await request(`${API}/message/${id}`);
+            document.getElementById("out_getMessages").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_getMessages").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('getMessages', false);
+        }
     }
 
     // 4. Update Message
     async function updateMessage() {
-        const id = document.getElementById("update_msg_id").value;
-        const result = await request(`${API}/message/${id}`, "PUT", {
-            message: document.getElementById("update_msg_text").value,
-        });
-        document.getElementById("out_updateMessage").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('updateMessage', true);
+        try {
+            const id = document.getElementById("update_msg_id").value;
+            const result = await request(`${API}/message/${id}`, "PUT", {
+                message: document.getElementById("update_msg_text").value,
+            });
+            document.getElementById("out_updateMessage").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_updateMessage").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('updateMessage', false);
+        }
     }
 
     // 5. Delete Message
     async function deleteMessage() {
-        const id = document.getElementById("delete_msg_id").value;
-        const result = await request(`${API}/message/${id}`, "DELETE");
-        document.getElementById("out_deleteMessage").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('deleteMessage', true);
+        try {
+            const id = document.getElementById("delete_msg_id").value;
+            const result = await request(`${API}/message/${id}`, "DELETE");
+            document.getElementById("out_deleteMessage").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_deleteMessage").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('deleteMessage', false);
+        }
     }
 
     // 6. Mark as Read
     async function markAsRead() {
-        const id = document.getElementById("read_msg_id").value;
-        const result = await request(`${API}/message/${id}/read`, "PUT");
-        document.getElementById("out_markAsRead").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('markAsRead', true);
+        try {
+            const id = document.getElementById("read_msg_id").value;
+            const result = await request(`${API}/message/${id}/read`, "PUT");
+            document.getElementById("out_markAsRead").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_markAsRead").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('markAsRead', false);
+        }
     }
 
     // 7. Get User Conversations
     async function getUserConversations() {
-        const id = document.getElementById("user_conversations_id").value;
-        const result = await request(`${API}/conversations/${id}`);
-        document.getElementById("out_userConversations").innerText = JSON.stringify(result, null, 4);
+        setLoadingState('getUserConversations', true);
+        try {
+            const id = document.getElementById("user_conversations_id").value;
+            const result = await request(`${API}/conversations/${id}`);
+            document.getElementById("out_userConversations").innerText = JSON.stringify(result, null, 4);
+        } catch (error) {
+            document.getElementById("out_userConversations").innerText = JSON.stringify({error: error.message}, null, 4);
+        } finally {
+            setLoadingState('getUserConversations', false);
+        }
     }
 </script>
 
 </body>
 </html>
-

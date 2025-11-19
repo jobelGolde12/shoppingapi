@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 
 class MessageController extends Controller
 {
+    
     // Start a new conversation or return existing one
     public function startConversation(Request $request)
     {
