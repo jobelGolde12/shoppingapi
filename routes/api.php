@@ -14,4 +14,4 @@ Route::get('/message/{conversation_id}', [MessageController::class, 'getMessages
 Route::put('/message/{id}', [MessageController::class, 'updateMessage']); // Edits a message
 Route::delete('/message/{id}', [MessageController::class, 'deleteMessage']); // Removes a message
 Route::put('/message/{id}/read', [MessageController::class, 'markAsRead']); // Flags as seen
-Route::get('/conversations/{user_id}', [MessageController::class, 'myConversations']); // Lists user's chats
+Route::get('/conversations/{id}', [MessageController::class, 'myConversations']); // Lists user's chats

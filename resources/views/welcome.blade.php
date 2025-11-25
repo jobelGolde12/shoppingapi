@@ -425,7 +425,7 @@
     </div>
 
     <!-- GET USER CONVERSATIONS -->
-    <div class="box">
+    {{-- <div class="box">
         <h2><i class="fas fa-comments"></i> My Conversations</h2>
         <p><span class="api-method method-get">GET</span> /api/conversations/{user_id}</p>
 
@@ -443,140 +443,236 @@
         </div>
         
         <div id="out_userConversations" class="output">Response will appear here</div>
-    </div>
+    </div> --}}
 
 </div>
 
 <script>
-    const API = "/api";
+const API = "/api";
 
-    async function request(url, method = "GET", body = null) {
-        return fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: body ? JSON.stringify(body) : null
-        }).then(res => res.json());
+// ============================
+// JSON / XML Toggle
+// ============================
+let responseFormat = localStorage.getItem("format") || "json";
+
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.createElement("div");
+    toggle.style = "padding: 10px; text-align:center; margin-bottom: 20px;";
+
+    toggle.innerHTML = `
+        <label style="font-weight: bold; margin-right: 10px;">Response Format:</label>
+        <select id="formatToggle" style="padding: 6px 10px; border-radius: 6px; border:1px solid #ccc;">
+            <option value="json" ${responseFormat === "json" ? "selected" : ""}>JSON</option>
+            <option value="xml"  ${responseFormat === "xml" ? "selected" : ""}>XML</option>
+        </select>
+    `;
+
+    document.body.prepend(toggle);
+
+    document.getElementById("formatToggle").addEventListener("change", (e) => {
+        responseFormat = e.target.value;
+        localStorage.setItem("format", responseFormat);
+    });
+});
+
+// Attach ?format=
+function applyFormat(url) {
+    const sep = url.includes("?") ? "&" : "?";
+    return url + sep + "format=" + responseFormat;
+}
+
+// ============================
+//  Request Helper
+// ============================
+async function request(url, method = "GET", body = null) {
+
+    url = applyFormat(url);
+
+    let headers = {
+        "Content-Type": "application/json",
+        "Accept": responseFormat === "xml" ? "application/xml" : "application/json"
+    };
+
+    const res = await fetch(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null
+    });
+
+    const text = await res.text();
+
+    // Return XML EXACTLY when XML was requested
+    if (responseFormat === "xml") {
+        return text;
     }
 
-    // Helper function to show loading state
-    function setLoadingState(buttonId, isLoading) {
-        const button = document.querySelector(`button[onclick="${buttonId}()"]`);
-        const loadingElement = document.getElementById(`loading_${buttonId}`);
-        
-        if (isLoading) {
-            button.disabled = true;
-            loadingElement.style.display = 'block';
+    // Otherwise parse JSON safely
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text; // fallback
+    }
+}
+
+// ============================
+//  Loading State Helper
+// ============================
+function setLoadingState(buttonId, isLoading) {
+    const button = document.querySelector(`button[onclick="${buttonId}()"]`);
+    const loadingElement = document.getElementById(`loading_${buttonId}`);
+    
+    if (isLoading) {
+        button.disabled = true;
+        loadingElement.style.display = 'block';
+    } else {
+        button.disabled = false;
+        loadingElement.style.display = 'none';
+    }
+}
+function formatXml(xml) {
+    const PADDING = '    '; // 4 spaces
+    const reg = /(>)(<)(\/*)/g;
+    let formatted = '';
+    let pad = 0;
+
+    xml = xml.replace(reg, '$1\r\n$2$3');
+    xml.split('\r\n').forEach((node) => {
+        let indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+            indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+            if (pad !== 0) pad -= 1;
+        } else if (node.match(/^<\w([^>]*[^\/])?>.*$/)) {
+            indent = 1;
         } else {
-            button.disabled = false;
-            loadingElement.style.display = 'none';
+            indent = 0;
         }
-    }
 
-    // 1. Start Conversation
-    async function startConversation() {
-        setLoadingState('startConversation', true);
-        try {
-            const result = await request(`${API}/conversation/start`, "POST", {
-                user_one_id: document.getElementById("user_one_id").value,
-                user_two_id: document.getElementById("user_two_id").value,
-            });
+        formatted += PADDING.repeat(pad) + node + '\r\n';
+        pad += indent;
+    });
+
+    return formatted.trim();
+}
+
+// ============================
+// API CALLS
+// ============================
+async function startConversation() {
+    setLoadingState('startConversation', true);
+    try {
+        const result = await request(`${API}/conversation/start`, "POST", {
+            user_one_id: document.getElementById("user_one_id").value,
+            user_two_id: document.getElementById("user_two_id").value,
+        });
+        if (typeof result === "string" && responseFormat === "xml") {
+     document.getElementById("out_startConversation").innerText = formatXml(result);
+        } else {
             document.getElementById("out_startConversation").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_startConversation").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('startConversation', false);
         }
-    }
 
-    // 2. Send Message
-    async function sendMessage() {
-        setLoadingState('sendMessage', true);
-        try {
-            const result = await request(`${API}/message/send`, "POST", {
-                conversation_id: document.getElementById("send_conversation_id").value,
-                sender_id: document.getElementById("send_sender_id").value,
-                message: document.getElementById("send_message").value,
-            });
+    } finally { setLoadingState('startConversation', false); }
+}
+
+async function sendMessage() {
+    setLoadingState('sendMessage', true);
+    try {
+        const result = await request(`${API}/message/send`, "POST", {
+            conversation_id: document.getElementById("send_conversation_id").value,
+            sender_id: document.getElementById("send_sender_id").value,
+            message: document.getElementById("send_message").value,
+        });
+        if (typeof result === "string" && responseFormat === "xml") {
+        document.getElementById("out_sendMessage").innerText = formatXml(result);
+        } else {
             document.getElementById("out_sendMessage").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_sendMessage").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('sendMessage', false);
         }
-    }
 
-    // 3. Get Messages
-    async function getMessages() {
-        setLoadingState('getMessages', true);
-        try {
-            const id = document.getElementById("get_messages_convo").value;
-            const result = await request(`${API}/message/${id}`);
-            document.getElementById("out_getMessages").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_getMessages").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('getMessages', false);
-        }
-    }
+    } finally { setLoadingState('sendMessage', false); }
+}
 
-    // 4. Update Message
-    async function updateMessage() {
-        setLoadingState('updateMessage', true);
-        try {
-            const id = document.getElementById("update_msg_id").value;
-            const result = await request(`${API}/message/${id}`, "PUT", {
-                message: document.getElementById("update_msg_text").value,
-            });
+async function getMessages() {
+    setLoadingState('getMessages', true);
+    try {
+        const id = document.getElementById("get_messages_convo").value;
+        const result = await request(`${API}/message/${id}`);
+        if (typeof result === "string" && responseFormat === "xml") {
+    document.getElementById("out_getMessages").innerText = formatXml(result);
+} else {
+    document.getElementById("out_getMessages").innerText = JSON.stringify(result, null, 4);
+}
+
+    } finally { setLoadingState('getMessages', false); }
+}
+
+async function updateMessage() {
+    setLoadingState('updateMessage', true);
+    try {
+        const id = document.getElementById("update_msg_id").value;
+        const result = await request(`${API}/message/${id}`, "PUT", {
+            message: document.getElementById("update_msg_text").value,
+        });
+        if (typeof result === "string" && responseFormat === "xml") {
+            document.getElementById("out_updateMessage").innerText = formatXml(result);
+        } else {
             document.getElementById("out_updateMessage").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_updateMessage").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('updateMessage', false);
         }
-    }
+    } finally { setLoadingState('updateMessage', false); }
+}
 
-    // 5. Delete Message
-    async function deleteMessage() {
-        setLoadingState('deleteMessage', true);
-        try {
-            const id = document.getElementById("delete_msg_id").value;
-            const result = await request(`${API}/message/${id}`, "DELETE");
+async function deleteMessage() {
+    setLoadingState('deleteMessage', true);
+    try {
+        const id = document.getElementById("delete_msg_id").value;
+        const result = await request(`${API}/message/${id}`, "DELETE");
+        if (typeof result === "string" && responseFormat === "xml") {
+            document.getElementById("out_deleteMessage").innerText = formatXml(result);
+        } else {
             document.getElementById("out_deleteMessage").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_deleteMessage").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('deleteMessage', false);
         }
-    }
+    } finally { setLoadingState('deleteMessage', false); }
+}
 
-    // 6. Mark as Read
-    async function markAsRead() {
-        setLoadingState('markAsRead', true);
-        try {
-            const id = document.getElementById("read_msg_id").value;
-            const result = await request(`${API}/message/${id}/read`, "PUT");
+async function markAsRead() {
+    setLoadingState('markAsRead', true);
+    try {
+        const id = document.getElementById("read_msg_id").value;
+        const result = await request(`${API}/message/${id}/read`, "PUT");
+        if (typeof result === "string" && responseFormat === "xml") {
+            document.getElementById("out_markAsRead").innerText = formatXml(result);
+        } else {
             document.getElementById("out_markAsRead").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_markAsRead").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('markAsRead', false);
         }
-    }
+    } finally { setLoadingState('markAsRead', false); }
+}
 
-    // 7. Get User Conversations
-    async function getUserConversations() {
-        setLoadingState('getUserConversations', true);
-        try {
-            const id = document.getElementById("user_conversations_id").value;
-            const result = await request(`${API}/conversations/${id}`);
-            document.getElementById("out_userConversations").innerText = JSON.stringify(result, null, 4);
-        } catch (error) {
-            document.getElementById("out_userConversations").innerText = JSON.stringify({error: error.message}, null, 4);
-        } finally {
-            setLoadingState('getUserConversations', false);
+async function getUserConversations() {
+    setLoadingState('getUserConversations', true);
+    try {
+        const id = document.getElementById("user_conversations_id").value;
+        
+        if (!id) {
+            document.getElementById("out_userConversations").innerText = "Error: Please enter a User ID";
+            return;
         }
+
+        const result = await request(`${API}/conversations/${id}`);
+        
+        if (typeof result === "string" && responseFormat === "xml") {
+            document.getElementById("out_userConversations").innerText = formatXml(result);
+        } else {
+            document.getElementById("out_userConversations").innerText = JSON.stringify(result, null, 4);
+        }
+
+    } catch (error) {
+        console.error("API Error:", error);
+        document.getElementById("out_userConversations").innerText = `Error: ${error.message}`;
+    } finally { 
+        setLoadingState('getUserConversations', false); 
     }
+}
 </script>
+
 
 </body>
 </html>
