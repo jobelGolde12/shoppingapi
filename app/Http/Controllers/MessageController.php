@@ -15,30 +15,35 @@ class MessageController extends Controller
        FORMAT IF EITHER JSON OR XML
     ============================================================ */
     private function isJsonOrXml($data, $status = 200)
-    {
-        $acceptHeader = strtolower(request()->header('Accept', ''));
-        $formatParam = strtolower(request()->get('format', ''));
+{
+    $acceptHeader = strtolower(request()->header('Accept', ''));
+    $formatParam = strtolower(request()->get('format', ''));
 
-        switch (true) {
-            case ($formatParam === 'json'):
-                return response()->json($data, $status);
-
-            case ($formatParam === 'xml'):
-                return $this->convertToXml($data, $status);
-
-            case (str_contains($acceptHeader, 'application/json') ||
-                str_contains($acceptHeader, 'json')):
-                return response()->json($data, $status);
-
-            case (str_contains($acceptHeader, 'application/xml') ||
-                str_contains($acceptHeader, 'text/xml') ||
-                str_contains($acceptHeader, 'xml')):
-                return $this->convertToXml($data, $status);
-
-            default:
-                return response()->json($data, $status);
-        }
+    // ALWAYS honor ?format=xml first
+    if ($formatParam === 'xml') {
+        return $this->convertToXml($data, $status);
     }
+
+    if ($formatParam === 'json') {
+        return response()->json($data, $status);
+    }
+
+    // Next, check Accept headers
+    if (str_contains($acceptHeader, 'application/xml') ||
+        str_contains($acceptHeader, 'text/xml') ||
+        str_contains($acceptHeader, 'xml')) {
+        return $this->convertToXml($data, $status);
+    }
+
+    if (str_contains($acceptHeader, 'application/json') ||
+        str_contains($acceptHeader, 'json')) {
+        return response()->json($data, $status);
+    }
+
+    // Default to JSON
+    return response()->json($data, $status);
+}
+
 
 
     private function convertToXml($data, $status = 200)
